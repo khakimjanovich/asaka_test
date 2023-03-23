@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+
+    app:
+        build:
+            args:
+                user: www
+                uid: 1000
+            context: ./
+            dockerfile: Dockerfile
+        image: asaka_test
+        container_name: asaka_test
+        restart: unless-stopped
+        tty: true
+        volumes:
+            - ./:/var/www/html/app
+            - ./docker-compose/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+            - asaka_test
+
+    webserver:
+        image: nginx:alpine
+        container_name: asaka_test_nginx
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "8090:80"
+            - "4453:443"
+        volumes:
+            - ./:/var/www/html/app
+            - ./docker-compose/nginx:/etc/nginx/conf.d/
+        networks:
+            - asaka_test
+
+    db:
+        image: mariadb:10.5.8
+        tty: true
+        ports:
+            - "3308:3306"
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: asaka_test
+            MYSQL_USER: root
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_PASSWORD: password
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            -   type: volume
+                source: mysqldata
+                target: /var/lib/mysql
+        networks:
+            - asaka_test
+
+networks:
+    asaka_test:
+        driver: bridge
+volumes:
+    mysqldata:
+
